@@ -11,6 +11,7 @@ SET search_path TO tienda, public;
 ---
 ## 0. Script inicial: base de datos, tablas y datos
 Ejecuta este bloque una sola vez, antes de las lecciones. Crea el esquema tienda, las tablas y los datos de ejemplo.
+```sql
 CREATE SCHEMA tienda;
 SET search_path TO tienda;
 CREATE TABLE clientes (
@@ -79,6 +80,8 @@ INSERT INTO lineas_pedido (pedido_id, producto_id, cantidad, precio_unit) VALUES
 INSERT INTO pagos (pedido_id, importe, metodo) VALUES
 (1, 158.90, 'tarjeta'),
 (2, 249.00, 'transferencia');
+```
+
 ## 1. Qué son funciones, procedimientos y PL/pgSQL
 
 **PL/pgSQL** es el lenguaje procedural de PostgreSQL. Permite declarar variables, tomar decisiones, iterar, controlar excepciones y combinar SQL en objetos reutilizables.

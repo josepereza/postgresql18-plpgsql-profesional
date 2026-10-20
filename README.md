@@ -186,3 +186,48 @@ docker compose down -v
 Si en algún momento modificas el archivo `init/01-schema-tienda.sql` y quieres que se vuelva a ejecutar desde cero, necesitas eliminar el volumen de datos (`docker compose down -v`) y volver a levantar (`docker compose up -d`). PostgreSQL solo ejecuta los scripts de inicialización cuando el directorio de datos está vacío.
 
 Con esto tienes un entorno Docker completamente funcional y reproducible para seguir practicando todos los ejemplos de funciones y procedimientos almacenados del tutorial.
+
+## Re-ejecutar el script de inicialización
+
+Solo hay que hacer:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+### Ver el estado del contenedor y del volumen
+
+```bash
+# Estado del contenedor
+docker compose ps
+
+# Volúmenes gestionados por Compose
+docker volume ls | grep tienda
+
+# Inspeccionar el volumen de datos
+docker volume inspect tienda-docker_postgres_data
+```
+
+### Eliminar también la imagen (opcional)
+
+```bash
+docker compose down -v --rmi all
+```
+
+---
+
+## Resumen de comandos
+
+| Acción | Comando |
+| :-- | :-- |
+| Arrancar | `docker compose up -d` |
+| Ver logs | `docker compose logs -f postgres` |
+| Conectarse con psql | `docker exec -it tienda-postgres psql -U tienda_user -d tienda` |
+| Detener conservando datos | `docker compose down` |
+| Detener y borrar datos | `docker compose down -v` |
+| Re-inicializar desde cero | `docker compose down -v && docker compose up -d` |
+| Ver estado | `docker compose ps` |
+| Ver volúmenes | `docker volume ls` |
+
+Con esto tienes el proyecto completo en Markdown: estructura de carpetas, script de inicialización, `docker-compose.yml`, README y todos los comandos para arrancar, detener y limpiar el entorno.

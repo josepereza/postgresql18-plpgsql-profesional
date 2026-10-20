@@ -1,4 +1,4 @@
-Proyecto Docker para la base de datos tienda (PostgreSQL 18)
+### Proyecto Docker para la base de datos tienda (PostgreSQL 18)
 A continuación tienes toda la estructura del proyecto en formato Markdown, lista para copiar y pegar. Se incluye la estructura de carpetas, el script de inicialización, el docker-compose.yml y los comandos para levantar, detener y limpiar el entorno.
 
 📁 Estructura del proyecto
@@ -10,6 +10,7 @@ tienda-docker/
     └── 01-schema-tienda.sql
 📄 1. docker-compose.yml
 yaml
+```bash
 services:
   postgres:
     image: postgres:18
@@ -33,6 +34,7 @@ services:
 
 volumes:
   postgres_data:
+```
 Puntos clave:
 
 POSTGRES_DB: tienda crea automáticamente la base de datos.
@@ -43,6 +45,8 @@ El directorio ./init se monta en /docker-entrypoint-initdb.d; los scripts .sql s
 
 📄 2. init/01-schema-tienda.sql
 sql
+```
+
 -- ============================================================
 -- Script de inicialización de la base de datos "tienda"
 -- Se ejecuta automáticamente al crear el contenedor por primera vez
@@ -150,6 +154,8 @@ INSERT INTO lineas_pedido (pedido_id, producto_id, cantidad, precio_unit) VALUES
 INSERT INTO pagos (pedido_id, importe, metodo) VALUES
 (1, 158.90, 'tarjeta'),
 (2, 249.00, 'transferencia');
+```
+
 📄 3. README.md (opcional pero recomendado)
 markdown
 # Proyecto Docker - Base de datos "tienda"
@@ -187,13 +193,14 @@ docker compose down -v
 docker compose up -d
 text
 
----
+```
+
 
 ## 🚀 4. Arrancar el entorno
 
 Desde la carpeta `tienda-docker/`:
 
-```bash
+
 # Levantar el contenedor en segundo plano
 docker compose up -d
 

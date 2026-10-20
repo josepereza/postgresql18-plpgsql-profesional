@@ -170,7 +170,9 @@ Entorno PostgreSQL 18 para practicar funciones y procedimientos almacenados en P
 ```bash
 docker compose up -d
 docker compose logs -f postgres
-Conectarse a la base de datos
+```
+
+## Conectarse a la base de datos
 bash
 docker exec -it tienda-postgres psql -U tienda_user -d tienda
 Dentro de psql:
@@ -179,13 +181,13 @@ sql
 SET search_path TO tienda;
 \dt
 SELECT * FROM clientes;
-Detener el entorno (conserva los datos)
+## Detener el entorno (conserva los datos)
 bash
 docker compose down
-Detener y limpiar TODO (borra los datos)
+## Detener y limpiar TODO (borra los datos)
 bash
 docker compose down -v
-Re-ejecutar el script de inicialización
+## Re-ejecutar el script de inicialización
 El script solo se ejecuta si el volumen está vacío. Para forzar la re-inicialización:
 
 bash
@@ -193,7 +195,7 @@ docker compose down -v
 docker compose up -d
 text
 
-```
+
 
 
 ## 🚀 4. Arrancar el entorno
@@ -223,17 +225,17 @@ SELECT * FROM productos;
 Salir con \q.
 
 🛑 5. Detener y limpiar
-Detener conservando los datos
+### Detener conservando los datos
 bash
 docker compose down
 El volumen postgres_data permanece intacto. Al volver a hacer docker compose up -d, los datos siguen ahí y el script de inicialización NO se vuelve a ejecutar.
 
-Detener y eliminar TODO (incluidos los datos)
+### Detener y eliminar TODO (incluidos los datos)
 bash
 docker compose down -v
 Esto elimina el contenedor y el volumen postgres_data. La próxima vez que ejecutes docker compose up -d, PostgreSQL creará la base de datos desde cero y volverá a ejecutar init/01-schema-tienda.sql.
 
-Re-ejecutar el script de inicialización
+### Re-ejecutar el script de inicialización
 Solo hay que hacer:
 
 bash

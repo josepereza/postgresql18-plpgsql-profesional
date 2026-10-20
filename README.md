@@ -1,63 +1,23 @@
-### Proyecto Docker para la base de datos tienda (PostgreSQL 18)
-A continuación tienes toda la estructura del proyecto en formato Markdown, lista para copiar y pegar. Se incluye la estructura de carpetas, el script de inicialización, el docker-compose.yml y los comandos para levantar, detener y limpiar el entorno.
+# Estructura del proyecto
 
-📁 Estructura del proyecto
-text
+Crea una carpeta para el proyecto y dentro de ella los siguientes archivos:
+
+```text
 tienda-docker/
 ├── docker-compose.yml
-├── README.md
 └── init/
     └── 01-schema-tienda.sql
-📄 1. docker-compose.yml
-yaml
-```bash
-services:
-  postgres:
-    image: postgres:18
-    container_name: tienda-postgres
-    environment:
-      POSTGRES_DB: tienda
-      POSTGRES_USER: tienda_user
-      POSTGRES_PASSWORD: tienda_pass
-    ports:
-      - "5432:5432"
-    volumes:
-      # Volumen para persistir los datos (ruta correcta para PG 18)
-      - postgres_data:/var/lib/postgresql
-      # Directorio de inicialización: se ejecuta al crear la BD por primera vez
-      - ./init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tienda_user -d tienda"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
-```
-Puntos clave:
-
-POSTGRES_DB: tienda crea automáticamente la base de datos.
-
-El volumen de datos se monta en /var/lib/postgresql (ruta correcta en PostgreSQL 18).
-
-El directorio ./init se monta en /docker-entrypoint-initdb.d; los scripts .sql se ejecutan solo la primera vez que se crea el volumen de datos.
-
-📄 2. init/01-schema-tienda.sql
-sql
 ```
 
--- ============================================================
--- Script de inicialización de la base de datos "tienda"
--- Se ejecuta automáticamente al crear el contenedor por primera vez
--- ============================================================
+## 1. El script de inicialización (`init/01-schema-tienda.sql`)
 
+Este archivo contiene exactamente el SQL que proporcionaste. Se ejecutará automáticamente al arrancar el contenedor por primera vez.
+
+```sql
+-- 01-schema-tienda.sql
 CREATE SCHEMA tienda;
 SET search_path TO tienda;
 
--- ------------------------------------------------------------
--- Tabla: clientes
--- ------------------------------------------------------------
 CREATE TABLE clientes (
     cliente_id SERIAL PRIMARY KEY,
     nombre TEXT NOT NULL,
@@ -65,9 +25,6 @@ CREATE TABLE clientes (
     fecha_alta DATE NOT NULL DEFAULT CURRENT_DATE
 );
 
--- ------------------------------------------------------------
--- Tabla: productos
--- ------------------------------------------------------------
 CREATE TABLE productos (
     producto_id SERIAL PRIMARY KEY,
     nombre TEXT NOT NULL,
@@ -76,9 +33,6 @@ CREATE TABLE productos (
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- ------------------------------------------------------------
--- Tabla: pedidos
--- ------------------------------------------------------------
 CREATE TABLE pedidos (
     pedido_id SERIAL PRIMARY KEY,
     cliente_id INTEGER NOT NULL REFERENCES clientes(cliente_id),
@@ -86,9 +40,6 @@ CREATE TABLE pedidos (
     estado TEXT NOT NULL DEFAULT 'pendiente'
 );
 
--- ------------------------------------------------------------
--- Tabla: lineas_pedido
--- ------------------------------------------------------------
 CREATE TABLE lineas_pedido (
     linea_id SERIAL PRIMARY KEY,
     pedido_id INTEGER NOT NULL REFERENCES pedidos(pedido_id),
@@ -97,9 +48,6 @@ CREATE TABLE lineas_pedido (
     precio_unit NUMERIC(10,2) NOT NULL
 );
 
--- ------------------------------------------------------------
--- Tabla: pagos
--- ------------------------------------------------------------
 CREATE TABLE pagos (
     pago_id SERIAL PRIMARY KEY,
     pedido_id INTEGER NOT NULL REFERENCES pedidos(pedido_id),
@@ -108,9 +56,6 @@ CREATE TABLE pagos (
     metodo TEXT NOT NULL
 );
 
--- ------------------------------------------------------------
--- Tabla: empleados
--- ------------------------------------------------------------
 CREATE TABLE empleados (
     id SERIAL PRIMARY KEY,
     nombre TEXT NOT NULL,
@@ -118,10 +63,6 @@ CREATE TABLE empleados (
     departamento TEXT,
     fecha_contratacion DATE DEFAULT CURRENT_DATE
 );
-
--- ============================================================
--- Datos de ejemplo
--- ============================================================
 
 INSERT INTO empleados (nombre, salario, departamento) VALUES
 ('Ana Torres', 2800.00, 'Ventas'),
@@ -140,7 +81,7 @@ INSERT INTO clientes (nombre, email) VALUES
 INSERT INTO productos (nombre, precio, stock) VALUES
 ('Teclado mecánico', 79.90, 50),
 ('Ratón inalámbrico', 39.50, 100),
-('Monitor 27"', 249.00, 20);
+('Monitor 27\"', 249.00, 20);
 
 INSERT INTO pedidos (cliente_id, estado) VALUES
 (1, 'pendiente'),
@@ -156,112 +97,92 @@ INSERT INTO pagos (pedido_id, importe, metodo) VALUES
 (2, 249.00, 'transferencia');
 ```
 
-📄 3. README.md (opcional pero recomendado)
-markdown
-# Proyecto Docker - Base de datos "tienda"
+> **Nota importante para PostgreSQL 18:** La imagen oficial de PostgreSQL 18 cambió la ubicación del volumen de datos. Ahora el `PGDATA` por defecto es `/var/lib/postgresql/18/docker` y el volumen recomendado a montar es `/var/lib/postgresql` (no `/var/lib/postgresql/data` como en versiones anteriores). El `docker-compose.yml` de abajo ya tiene esto en cuenta.
 
-Entorno PostgreSQL 18 para practicar funciones y procedimientos almacenados en PL/pgSQL.
+## 2. El archivo `docker-compose.yml`
 
-## Requisitos
-- Docker
-- Docker Compose
+```yaml
+services:
+  postgres:
+    image: postgres:18
+    container_name: tienda-postgres
+    environment:
+      POSTGRES_DB: tienda
+      POSTGRES_USER: tienda_user
+      POSTGRES_PASSWORD: tienda_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      # Volumen para persistir los datos (ruta correcta para PG 18)
+      - postgres_data:/var/lib/postgresql
+      # Montamos el directorio init para que se ejecute el script al crear la BD
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tienda_user -d tienda"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-## Arrancar el entorno
-```bash
-docker compose up -d
-docker compose logs -f postgres
+volumes:
+  postgres_data:
 ```
 
-## Conectarse a la base de datos
-bash
-docker exec -it tienda-postgres psql -U tienda_user -d tienda
-Dentro de psql:
+Puntos clave de esta configuración:
 
-sql
-SET search_path TO tienda;
-\dt
-SELECT * FROM clientes;
-## Detener el entorno (conserva los datos)
-bash
-docker compose down
-## Detener y limpiar TODO (borra los datos)
-bash
-docker compose down -v
-## Re-ejecutar el script de inicialización
-El script solo se ejecuta si el volumen está vacío. Para forzar la re-inicialización:
+- `POSTGRES_DB: tienda`: crea automáticamente la base de datos llamada `tienda`.
+- **Volumen de datos:** se monta en `/var/lib/postgresql` (la ruta correcta para PG 18). Así los datos persisten aunque elimines el contenedor.
+- **Volumen de inicialización:** `./init:/docker-entrypoint-initdb.d` monta tu carpeta local `init` dentro del contenedor. PostgreSQL ejecutará los archivos `.sql` que encuentre ahí solo si el volumen de datos está vacío (es decir, en la primera ejecución).
 
-bash
-docker compose down -v
-docker compose up -d
-text
+## 3. Comandos para levantar y gestionar el entorno
 
+Abre una terminal en la carpeta `tienda-docker/` y ejecuta:
 
-
-
-## 🚀 4. Arrancar el entorno
-
-Desde la carpeta `tienda-docker/`:
-
-
+```bash
 # Levantar el contenedor en segundo plano
 docker compose up -d
 
-# Ver los logs para comprobar que la inicialización terminó correctamente
+# Ver los logs para comprobar que el script de inicialización se ejecutó sin errores
 docker compose logs -f postgres
-Salir de los logs con Ctrl+C.
+```
 
-Conectarse a la base de datos:
+Si todo ha ido bien, en los logs verás algo similar a `database system is ready to accept connections`. Para salir de los logs, pulsa `Ctrl+C`.
 
-bash
+Conectarse a la base de datos con `psql` desde el host:
+
+```bash
+# Entrar al contenedor y abrir una sesión psql en la BD tienda
 docker exec -it tienda-postgres psql -U tienda_user -d tienda
-Verificar el contenido:
+```
 
-sql
-SET search_path TO tienda;
+Una vez dentro, puedes verificar que el esquema y las tablas existen:
+
+```sql
+-- Listar esquemas
 \dn
+
+-- Cambiar al esquema tienda
+SET search_path TO tienda;
+
+-- Listar tablas
 \dt
+
+-- Consultar algunos datos
 SELECT * FROM clientes;
 SELECT * FROM productos;
-Salir con \q.
+```
 
-🛑 5. Detener y limpiar
-### Detener conservando los datos
-bash
+Para salir de `psql`: `\q`.
+
+## 4. Detener y limpiar
+
+```bash
+# Detener el contenedor (los datos persisten en el volumen)
 docker compose down
-El volumen postgres_data permanece intacto. Al volver a hacer docker compose up -d, los datos siguen ahí y el script de inicialización NO se vuelve a ejecutar.
 
-### Detener y eliminar TODO (incluidos los datos)
-bash
+# Detener y ELIMINAR el volumen de datos (perderás todo lo que hayas insertado)
 docker compose down -v
-Esto elimina el contenedor y el volumen postgres_data. La próxima vez que ejecutes docker compose up -d, PostgreSQL creará la base de datos desde cero y volverá a ejecutar init/01-schema-tienda.sql.
+```
 
-### Re-ejecutar el script de inicialización
-Solo hay que hacer:
+Si en algún momento modificas el archivo `init/01-schema-tienda.sql` y quieres que se vuelva a ejecutar desde cero, necesitas eliminar el volumen de datos (`docker compose down -v`) y volver a levantar (`docker compose up -d`). PostgreSQL solo ejecuta los scripts de inicialización cuando el directorio de datos está vacío.
 
-bash
-docker compose down -v
-docker compose up -d
-Ver el estado del contenedor y del volumen
-bash
-# Estado del contenedor
-docker compose ps
-
-# Volúmenes gestionados por compose
-docker volume ls | grep tienda
-
-# Inspeccionar el volumen de datos
-docker volume inspect tienda-docker_postgres_data
-Eliminar también la imagen (opcional)
-bash
-docker compose down -v --rmi all
-📌 Resumen de comandos
-Acción	Comando
-Arrancar	docker compose up -d
-Ver logs	docker compose logs -f postgres
-Conectarse con psql	docker exec -it tienda-postgres psql -U tienda_user -d tienda
-Detener conservando datos	docker compose down
-Detener y borrar datos	docker compose down -v
-Re-inicializar desde cero	docker compose down -v && docker compose up -d
-Ver estado	docker compose ps
-Ver volúmenes	docker volume ls
-Con esto tienes el proyecto completo en Markdown: estructura de carpetas, script de inicialización, docker-compose.yml, README y todos los comandos para arrancar, detener y limpiar el entorno.
+Con esto tienes un entorno Docker completamente funcional y reproducible para seguir practicando todos los ejemplos de funciones y procedimientos almacenados del tutorial.
